@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dirkster.AvalonDock" Version="4.74.1" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.8" />
   </ItemGroup>
 

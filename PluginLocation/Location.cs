@@ -24,7 +24,7 @@ namespace PluginLocation
                 Brush brush = Brushes.Yellow;
 
                 string date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                string geo = "Geo: 55.7558° N, 37.6173° E";
+                string geo = "Geo: 00.0° N, 00.0° E";
 
                 SizeF dateSize = g.MeasureString(date, font);
                 SizeF geoSize = g.MeasureString(geo, font);

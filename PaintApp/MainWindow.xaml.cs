@@ -1,18 +1,14 @@
-﻿using Microsoft.Win32;
+﻿using AvalonDock.Layout;
+using Microsoft.Win32;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
-using Application = System.Windows.Application;
-using Button = System.Windows.Controls.Button;
-using Label = System.Windows.Controls.Label;
-using MessageBox = System.Windows.MessageBox;
-using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
-using ProgressBar = System.Windows.Controls.ProgressBar;
-using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
+using System.Windows.Controls.Ribbon;
+using AvalonDock;
 
 namespace PaintApp
 {
@@ -27,42 +23,51 @@ namespace PaintApp
             _pluginManager = new PluginManager();
             UpdateFiltersMenu();
             UpdateUIState();
+            DockManager.ActiveContentChanged += DockManager_ActiveContentChanged;
         }
 
         private void UpdateFiltersMenu()
         {
-            FiltersMenu.Items.Clear();
-            var configItem = new MenuItem { Header = "Настроить плагины...", ToolTip = "Управление загрузкой модулей" };
-            configItem.Click += ConfigurePlugins_Click;
-            FiltersMenu.Items.Add(configItem);
-            FiltersMenu.Items.Add(new Separator());
+            FiltersGroup.Items.Clear();
+
+            var configBtn = new RibbonButton { Label = "Настроить плагины...", Tag = "Config" };
+            configBtn.Click += ConfigurePlugins_Click;
+            FiltersGroup.Items.Add(configBtn);
+
+            FiltersGroup.Items.Add(new RibbonSeparator());
 
             foreach (var plugin in _pluginManager.LoadedPlugins.Values)
             {
-                MenuItem item = new MenuItem { Header = plugin.Name, Tag = plugin };
-                item.Click += Plugin_Click;
-                FiltersMenu.Items.Add(item);
+                var btn = new RibbonButton { Label = plugin.Name, Tag = plugin };
+                btn.Click += Plugin_Click;
+                FiltersGroup.Items.Add(btn);
             }
         }
 
         private void UpdateUIState()
         {
-            bool hasDoc = DocumentTabs.SelectedItem != null;
-            foreach (var item in FiltersMenu.Items)
+            bool hasDoc = GetActiveDocument() != null;
+            foreach (var item in FiltersGroup.Items)
             {
-                if (item is MenuItem menuItem && menuItem.Tag != null)
+                if (item is RibbonButton btn && btn.Tag is PluginInterface.IPlugin)
                 {
-                    menuItem.IsEnabled = hasDoc;
+                    btn.IsEnabled = hasDoc;
                 }
             }
+        }
+
+        private DocumentView GetActiveDocument()
+        {
+            var activeLayoutDoc = DockManager.Layout.Descendents().OfType<LayoutDocument>().FirstOrDefault(d => d.IsActive);
+            return activeLayoutDoc?.Content as DocumentView;
         }
 
         private void NewFile_Click(object sender, RoutedEventArgs e)
         {
             DocumentView doc = new DocumentView();
-            TabItem tab = new TabItem { Header = "Без названия", Content = doc };
-            DocumentTabs.Items.Add(tab);
-            DocumentTabs.SelectedItem = tab;
+            LayoutDocument layoutDoc = new LayoutDocument { Title = "Без названия", Content = doc };
+            DocumentPane.Children.Add(layoutDoc);
+            layoutDoc.IsActive = true;
             UpdateUIState();
         }
 
@@ -73,18 +78,19 @@ namespace PaintApp
             {
                 DocumentView doc = new DocumentView();
                 await doc.LoadImageAsync(dlg.FileName);
-                TabItem tab = new TabItem { Header = Path.GetFileName(dlg.FileName), Content = doc, Tag = dlg.FileName };
-                DocumentTabs.Items.Add(tab);
-                DocumentTabs.SelectedItem = tab;
+                LayoutDocument layoutDoc = new LayoutDocument { Title = Path.GetFileName(dlg.FileName), Content = doc, ToolTip = dlg.FileName };
+                DocumentPane.Children.Add(layoutDoc);
+                layoutDoc.IsActive = true;
                 UpdateUIState();
             }
         }
 
         private async void SaveFile_Click(object sender, RoutedEventArgs e)
         {
-            if (DocumentTabs.SelectedItem is TabItem tab && tab.Content is DocumentView doc)
+            DocumentView doc = GetActiveDocument();
+            if (doc != null && DockManager.Layout.Descendents().OfType<LayoutDocument>().FirstOrDefault(d => d.IsActive) is LayoutDocument tab)
             {
-                if (tab.Tag is string path)
+                if (tab.ToolTip is string path)
                 {
                     await doc.SaveImageAsync(path);
                 }
@@ -97,14 +103,15 @@ namespace PaintApp
 
         private async void SaveAsFile_Click(object sender, RoutedEventArgs e)
         {
-            if (DocumentTabs.SelectedItem is TabItem tab && tab.Content is DocumentView doc)
+            DocumentView doc = GetActiveDocument();
+            if (doc != null && DockManager.Layout.Descendents().OfType<LayoutDocument>().FirstOrDefault(d => d.IsActive) is LayoutDocument tab)
             {
                 SaveFileDialog dlg = new SaveFileDialog { Filter = "PNG|*.png|JPEG|*.jpg|BMP|*.bmp" };
                 if (dlg.ShowDialog() == true)
                 {
                     await doc.SaveImageAsync(dlg.FileName);
-                    tab.Header = Path.GetFileName(dlg.FileName);
-                    tab.Tag = dlg.FileName;
+                    tab.Title = Path.GetFileName(dlg.FileName);
+                    tab.ToolTip = dlg.FileName;
                 }
             }
         }
@@ -113,13 +120,10 @@ namespace PaintApp
 
         private void SelectColor_Click(object sender, RoutedEventArgs e)
         {
-            if (DocumentTabs.SelectedItem is TabItem tab && tab.Content is DocumentView doc)
+            DocumentView doc = GetActiveDocument();
+            if (doc != null)
             {
-                ColorPickerWindow colorPicker = new ColorPickerWindow
-                {
-                    Owner = this
-                };
-
+                ColorPickerWindow colorPicker = new ColorPickerWindow { Owner = this };
                 if (colorPicker.ShowDialog() == true)
                 {
                     doc.CurrentColor = colorPicker.SelectedColor;
@@ -130,13 +134,10 @@ namespace PaintApp
 
         private void StarSettings_Click(object sender, RoutedEventArgs e)
         {
-            if (DocumentTabs.SelectedItem is TabItem tab && tab.Content is DocumentView doc)
+            DocumentView doc = GetActiveDocument();
+            if (doc != null)
             {
-                StarSettingsWindow settingsWindow = new StarSettingsWindow(doc.StarPoints, doc.StarInnerRatio)
-                {
-                    Owner = this
-                };
-
+                StarSettingsWindow settingsWindow = new StarSettingsWindow(doc.StarPoints, doc.StarInnerRatio) { Owner = this };
                 if (settingsWindow.ShowDialog() == true)
                 {
                     doc.StarPoints = settingsWindow.Points;
@@ -148,49 +149,58 @@ namespace PaintApp
 
         private void SetTool_Click(object sender, RoutedEventArgs e)
         {
-            if (DocumentTabs.SelectedItem is TabItem tab && tab.Content is DocumentView doc)
+            DocumentView doc = GetActiveDocument();
+            if (doc != null && sender is RibbonButton btn)
             {
-                doc.CurrentTool = (string)((MenuItem)sender).Tag;
+                doc.CurrentTool = btn.Tag as string;
                 StatusText.Text = $"Инструмент: {doc.CurrentTool}";
             }
         }
 
         private async void Plugin_Click(object sender, RoutedEventArgs e)
         {
-            if (DocumentTabs.SelectedItem is TabItem tab && tab.Content is DocumentView doc)
+            DocumentView doc = GetActiveDocument();
+            if (doc == null) return;
+
+            if (!(sender is RibbonButton btn) || !(btn.Tag is PluginInterface.IPlugin plugin)) return;
+
+            _cts = new CancellationTokenSource();
+            Window progressWindow = new Window
             {
-                if (!(e.OriginalSource is MenuItem item) || !(item.Tag is PluginInterface.IPlugin plugin)) return;
+                Title = plugin.Name,
+                Width = 300,
+                Height = 150,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = this,
+                WindowStyle = WindowStyle.ToolWindow,
+                ResizeMode = ResizeMode.NoResize
+            };
 
-                _cts = new CancellationTokenSource();
-                Window progressWindow = new Window
-                {
-                    Title = plugin.Name,
-                    Width = 300,
-                    Height = 150,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Owner = this,
-                    WindowStyle = WindowStyle.ToolWindow
-                };
+            ProgressBar pb = new ProgressBar { Height = 20, Margin = new Thickness(10), Minimum = 0, Maximum = 100 };
+            Button cancelBtn = new Button { Content = "Отмена", Width = 80, Height = 30, Margin = new Thickness(10) };
+            cancelBtn.Click += (s, args) => _cts.Cancel();
 
-                ProgressBar pb = new ProgressBar { Height = 20, Margin = new Thickness(10), Minimum = 0, Maximum = 100 };
-                Button cancelBtn = new Button { Content = "Отмена", Width = 80, Height = 30, Margin = new Thickness(10) };
-                cancelBtn.Click += (s, args) => _cts.Cancel();
+            StackPanel panel = new StackPanel();
+            panel.Children.Add(new Label { Content = "Обработка...", HorizontalAlignment = HorizontalAlignment.Center });
+            panel.Children.Add(pb);
+            panel.Children.Add(cancelBtn);
+            progressWindow.Content = panel;
 
-                StackPanel panel = new StackPanel();
-                panel.Children.Add(new Label { Content = "Обработка...", HorizontalAlignment = HorizontalAlignment.Center });
-                panel.Children.Add(pb);
-                panel.Children.Add(cancelBtn);
-                progressWindow.Content = panel;
+            var progress = new Progress<int>(val => pb.Value = val);
 
-                var progress = new Progress<int>(val => pb.Value = val);
+            progressWindow.Show();
 
+            try
+            {
                 await Task.Run(() =>
                 {
                     var bmp = doc.GetBitmap();
                     plugin.TransformAsync(bmp, progress, _cts.Token);
                     Application.Current.Dispatcher.Invoke(() => doc.SetBitmap(bmp));
                 }, _cts.Token);
-
+            }
+            finally
+            {
                 progressWindow.Close();
                 StatusText.Text = _cts.IsCancellationRequested ? "Отменено" : "Готово";
             }
@@ -202,15 +212,12 @@ namespace PaintApp
             UpdateFiltersMenu();
         }
 
-        private void CascadeWindows_Click(object sender, RoutedEventArgs e) { }
-        private void TileWindows_Click(object sender, RoutedEventArgs e) { }
-
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("MDI Paint WPF\nВерсия 1.0\nРеализация на 10 баллов + Вариант 1", "О программе");
+            MessageBox.Show("MDI Paint WPF\nВерсия 1.0\nРеализация на 10 баллов + Вариант 1\nИнтеграция AvalonDock для причаливающих окон", "О программе");
         }
 
-        private void DocumentTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void DockManager_ActiveContentChanged(object sender, EventArgs e)
         {
             UpdateUIState();
         }
