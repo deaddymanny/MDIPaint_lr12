@@ -13,6 +13,8 @@
                 <MenuItem Header="Вы_ход" Click="Exit_Click"/>
             </MenuItem>
             <MenuItem Header="_Инструменты">
+                <MenuItem Header="Выбрать _цвет..." Click="SelectColor_Click"/>
+                <Separator/>
                 <MenuItem Header="Перо" Click="SetTool_Click" Tag="Pen"/>
                 <MenuItem Header="Линия" Click="SetTool_Click" Tag="Line"/>
                 <MenuItem Header="Эллипс" Click="SetTool_Click" Tag="Ellipse"/>
@@ -21,6 +23,7 @@
                 <MenuItem Header="Заливка" Click="SetTool_Click" Tag="Fill"/>
                 <MenuItem Header="Масштаб +" Click="SetTool_Click" Tag="ZoomIn"/>
                 <MenuItem Header="Масштаб -" Click="SetTool_Click" Tag="ZoomOut"/>
+                <MenuItem Header="Настройки _Звезды..." Click="StarSettings_Click"/>
                 <MenuItem Header="Звезда (Вар 1)" Click="SetTool_Click" Tag="Star"/>
             </MenuItem>
             <MenuItem x:Name="FiltersMenu" Header="_Фильтры">

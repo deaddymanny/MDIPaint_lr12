@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using Application = System.Windows.Application;
+using Button = System.Windows.Controls.Button;
+using Label = System.Windows.Controls.Label;
+using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using ProgressBar = System.Windows.Controls.ProgressBar;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace PaintApp
 {
@@ -104,6 +111,41 @@ namespace PaintApp
 
         private void Exit_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
 
+        private void SelectColor_Click(object sender, RoutedEventArgs e)
+        {
+            if (DocumentTabs.SelectedItem is TabItem tab && tab.Content is DocumentView doc)
+            {
+                ColorPickerWindow colorPicker = new ColorPickerWindow
+                {
+                    Owner = this
+                };
+
+                if (colorPicker.ShowDialog() == true)
+                {
+                    doc.CurrentColor = colorPicker.SelectedColor;
+                    StatusText.Text = $"Цвет изменен на: {doc.CurrentColor.Name}";
+                }
+            }
+        }
+
+        private void StarSettings_Click(object sender, RoutedEventArgs e)
+        {
+            if (DocumentTabs.SelectedItem is TabItem tab && tab.Content is DocumentView doc)
+            {
+                StarSettingsWindow settingsWindow = new StarSettingsWindow(doc.StarPoints, doc.StarInnerRatio)
+                {
+                    Owner = this
+                };
+
+                if (settingsWindow.ShowDialog() == true)
+                {
+                    doc.StarPoints = settingsWindow.Points;
+                    doc.StarInnerRatio = settingsWindow.Ratio;
+                    StatusText.Text = $"Звезда: {doc.StarPoints} лучей, коэффициент {doc.StarInnerRatio}";
+                }
+            }
+        }
+
         private void SetTool_Click(object sender, RoutedEventArgs e)
         {
             if (DocumentTabs.SelectedItem is TabItem tab && tab.Content is DocumentView doc)
@@ -160,17 +202,12 @@ namespace PaintApp
             UpdateFiltersMenu();
         }
 
-        private void CascadeWindows_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void TileWindows_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        private void CascadeWindows_Click(object sender, RoutedEventArgs e) { }
+        private void TileWindows_Click(object sender, RoutedEventArgs e) { }
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("MDI Paint WPF", "О программе");
+            MessageBox.Show("MDI Paint WPF\nВерсия 1.0\nРеализация на 10 баллов + Вариант 1", "О программе");
         }
 
         private void DocumentTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)

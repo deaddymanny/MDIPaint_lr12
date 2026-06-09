@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -8,16 +9,19 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using Point = System.Windows.Point;
 
 namespace PaintApp
 {
     public partial class DocumentView : UserControl
     {
         public string CurrentTool { get; set; } = "Pen";
+        public System.Drawing.Color CurrentColor { get; set; } = System.Drawing.Color.Black;
+        public int StarPoints { get; set; } = 5;
+        public double StarInnerRatio { get; set; } = 0.5;
+
         private WriteableBitmap _bitmap;
         private System.Drawing.Bitmap _backingBitmap;
-        private Point _startPoint;
+        private System.Windows.Point _startPoint;
         private bool _isDrawing;
 
         public DocumentView()
@@ -87,6 +91,13 @@ namespace PaintApp
                     ApplyZoom(CurrentTool == "ZoomIn" ? 1.2 : 0.8);
                     _isDrawing = false;
                 }
+                else if (CurrentTool == "Fill")
+                {
+                    System.Drawing.Point pt = new System.Drawing.Point((int)_startPoint.X, (int)_startPoint.Y);
+                    System.Drawing.Color targetColor = _backingBitmap.GetPixel(pt.X, pt.Y);
+                    FloodFill(pt.X, pt.Y, targetColor, CurrentColor);
+                    _isDrawing = false;
+                }
             }
         }
 
@@ -94,10 +105,10 @@ namespace PaintApp
         {
             if (_isDrawing && e.LeftButton == MouseButtonState.Pressed)
             {
-                Point currentPoint = e.GetPosition(CanvasImage);
+                System.Windows.Point currentPoint = e.GetPosition(CanvasImage);
                 if (CurrentTool == "Pen")
                 {
-                    DrawLine(_startPoint, currentPoint, System.Drawing.Color.Black, 2);
+                    DrawLine(_startPoint, currentPoint, CurrentColor, 2);
                     _startPoint = currentPoint;
                 }
                 else if (CurrentTool == "Eraser")
@@ -112,28 +123,24 @@ namespace PaintApp
         {
             if (_isDrawing)
             {
-                Point endPoint = e.GetPosition(CanvasImage);
+                System.Windows.Point endPoint = e.GetPosition(CanvasImage);
                 if (CurrentTool == "Line")
                 {
-                    DrawLine(_startPoint, endPoint, System.Drawing.Color.Black, 2);
+                    DrawLine(_startPoint, endPoint, CurrentColor, 2);
                 }
                 else if (CurrentTool == "Ellipse")
                 {
-                    DrawEllipse(_startPoint, endPoint);
+                    DrawEllipse(_startPoint, endPoint, CurrentColor);
                 }
                 else if (CurrentTool == "Star")
                 {
-                    DrawStar(_startPoint, endPoint, 5, 0.5);
-                }
-                else if (CurrentTool == "Fill")
-                {
-                    FloodFill((int)endPoint.X, (int)endPoint.Y, System.Drawing.Color.Red, System.Drawing.Color.White);
+                    DrawStar(_startPoint, endPoint, StarPoints, StarInnerRatio, CurrentColor);
                 }
                 _isDrawing = false;
             }
         }
 
-        private void DrawLine(Point p1, Point p2, System.Drawing.Color color, int width)
+        private void DrawLine(System.Windows.Point p1, System.Windows.Point p2, System.Drawing.Color color, int width)
         {
             using (Graphics g = Graphics.FromImage(_backingBitmap))
             {
@@ -142,7 +149,7 @@ namespace PaintApp
             UpdateWpfImage();
         }
 
-        private void DrawEllipse(Point p1, Point p2)
+        private void DrawEllipse(System.Windows.Point p1, System.Windows.Point p2, System.Drawing.Color color)
         {
             using (Graphics g = Graphics.FromImage(_backingBitmap))
             {
@@ -150,12 +157,18 @@ namespace PaintApp
                 float y = Math.Min((float)p1.Y, (float)p2.Y);
                 float w = Math.Abs((float)(p2.X - p1.X));
                 float h = Math.Abs((float)(p2.Y - p1.Y));
-                g.DrawEllipse(System.Drawing.Pens.Black, x, y, w, h);
+
+                using (SolidBrush brush = new SolidBrush(color))
+                using (Pen pen = new Pen(color, 2))
+                {
+                    g.FillEllipse(brush, x, y, w, h);
+                    g.DrawEllipse(pen, x, y, w, h);
+                }
             }
             UpdateWpfImage();
         }
 
-        private void DrawStar(Point center, Point edge, int points, double innerRatio)
+        private void DrawStar(System.Windows.Point center, System.Windows.Point edge, int points, double innerRatio, System.Drawing.Color color)
         {
             using (Graphics g = Graphics.FromImage(_backingBitmap))
             {
@@ -172,14 +185,44 @@ namespace PaintApp
                     pts[i].Y = (float)(center.Y + r * Math.Sin(angle));
                     angle += step;
                 }
-                g.FillPolygon(System.Drawing.Brushes.Gold, pts);
-                g.DrawPolygon(System.Drawing.Pens.Black, pts);
+
+                using (SolidBrush brush = new SolidBrush(color))
+                using (Pen pen = new Pen(System.Drawing.Color.Black, 1))
+                {
+                    g.FillPolygon(brush, pts);
+                    g.DrawPolygon(pen, pts);
+                }
             }
             UpdateWpfImage();
         }
 
         private void FloodFill(int x, int y, System.Drawing.Color targetColor, System.Drawing.Color replacementColor)
         {
+            if (targetColor == replacementColor) return;
+
+            Stack<System.Drawing.Point> stack = new Stack<System.Drawing.Point>();
+            stack.Push(new System.Drawing.Point(x, y));
+
+            int width = _backingBitmap.Width;
+            int height = _backingBitmap.Height;
+
+            while (stack.Count > 0)
+            {
+                System.Drawing.Point pt = stack.Pop();
+
+                if (pt.X < 0 || pt.X >= width || pt.Y < 0 || pt.Y >= height) continue;
+
+                if (_backingBitmap.GetPixel(pt.X, pt.Y) == targetColor)
+                {
+                    _backingBitmap.SetPixel(pt.X, pt.Y, replacementColor);
+
+                    stack.Push(new System.Drawing.Point(pt.X + 1, pt.Y));
+                    stack.Push(new System.Drawing.Point(pt.X - 1, pt.Y));
+                    stack.Push(new System.Drawing.Point(pt.X, pt.Y + 1));
+                    stack.Push(new System.Drawing.Point(pt.X, pt.Y - 1));
+                }
+            }
+            UpdateWpfImage();
         }
 
         private void ApplyZoom(double factor)
