@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PluginDynamic\PluginDynamic.csproj" />
+    <ProjectReference Include="..\PluginGray\PluginGray.csproj" />
+    <ProjectReference Include="..\PluginInterface\PluginInterface.csproj" />
+    <ProjectReference Include="..\PluginLocation\PluginLocation.csproj" />
+    <ProjectReference Include="..\PluginMedian\PluginMedian.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="mkdir &quot;$(TargetDir)Plugins&quot;&#xD;&#xA;copy &quot;$(TargetDir)PluginGrayscale.dll&quot; &quot;$(TargetDir)Plugins\&quot; /Y&#xD;&#xA;copy &quot;$(TargetDir)PluginMedian.dll&quot; &quot;$(TargetDir)Plugins\&quot; /Y&#xD;&#xA;copy &quot;$(TargetDir)PluginWatermark.dll&quot; &quot;$(TargetDir)Plugins\&quot; /Y&#xD;&#xA;copy &quot;$(TargetDir)PluginDynamic.dll&quot; &quot;$(TargetDir)Plugins\&quot; /Y" />
+  </Target>
+
+</Project>

@@ -1,0 +1,46 @@
+﻿<Window x:Class="PaintApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MDI Paint WPF" Height="600" Width="900">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Файл">
+                <MenuItem Header="_Новый" Click="NewFile_Click" InputGestureText="Ctrl+N"/>
+                <MenuItem Header="_Открыть..." Click="OpenFile_Click" InputGestureText="Ctrl+O"/>
+                <MenuItem Header="_Сохранить" Click="SaveFile_Click" InputGestureText="Ctrl+S"/>
+                <MenuItem Header="Сохранить _как..." Click="SaveAsFile_Click"/>
+                <Separator/>
+                <MenuItem Header="Вы_ход" Click="Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Инструменты">
+                <MenuItem Header="Перо" Click="SetTool_Click" Tag="Pen"/>
+                <MenuItem Header="Линия" Click="SetTool_Click" Tag="Line"/>
+                <MenuItem Header="Эллипс" Click="SetTool_Click" Tag="Ellipse"/>
+                <MenuItem Header="Ластик" Click="SetTool_Click" Tag="Eraser"/>
+                <MenuItem Header="Текст" Click="SetTool_Click" Tag="Text"/>
+                <MenuItem Header="Заливка" Click="SetTool_Click" Tag="Fill"/>
+                <MenuItem Header="Масштаб +" Click="SetTool_Click" Tag="ZoomIn"/>
+                <MenuItem Header="Масштаб -" Click="SetTool_Click" Tag="ZoomOut"/>
+                <MenuItem Header="Звезда (Вар 1)" Click="SetTool_Click" Tag="Star"/>
+            </MenuItem>
+            <MenuItem x:Name="FiltersMenu" Header="_Фильтры">
+                <MenuItem Header="Настроить плагины..." Click="ConfigurePlugins_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Окно">
+                <MenuItem Header="Каскадом" Click="CascadeWindows_Click"/>
+                <MenuItem Header="Мозаикой" Click="TileWindows_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Справка">
+                <MenuItem Header="О программе" Click="About_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <StatusBar DockPanel.Dock="Bottom" x:Name="StatusBar">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText">Готов</TextBlock>
+            </StatusBarItem>
+        </StatusBar>
+
+        <TabControl x:Name="DocumentTabs" SelectionChanged="DocumentTabs_SelectionChanged"/>
+    </DockPanel>
+</Window>

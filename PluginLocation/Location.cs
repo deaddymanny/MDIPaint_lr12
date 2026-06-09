@@ -8,7 +8,7 @@ namespace PluginLocation
     public class Location : IPlugin
     {
         public string Name => "Дата и геолокация";
-        public string Author => "Student";
+        public string Author => "Катаргин Р.А.";
 
         public void TransformAsync(Bitmap bitmap, IProgress<int> progress, CancellationToken cancellationToken)
         {

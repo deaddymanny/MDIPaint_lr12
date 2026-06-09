@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace PluginInterface
 {
-    [AttributeUsage(AttributeTargets.Class)]
     public class VersionAttribute : Attribute
     {
         public int Major { get; }

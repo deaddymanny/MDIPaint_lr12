@@ -9,7 +9,7 @@ namespace PluginMedian
     public class Median : IPlugin
     {
         public string Name => "Медианный фильтр";
-        public string Author => "Student";
+        public string Author => "Катаргин Р.А.";
 
         public void TransformAsync(Bitmap bitmap, IProgress<int> progress, CancellationToken cancellationToken)
         {

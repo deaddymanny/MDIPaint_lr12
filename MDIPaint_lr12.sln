@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178 d17.12
+VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginInterface", "PluginInterface\PluginInterface.csproj", "{98C2AF19-713A-4A5E-8D39-30B380D88590}"
 EndProject
@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginDynamic", "PluginDyna
 	ProjectSection(ProjectDependencies) = postProject
 		{98C2AF19-713A-4A5E-8D39-30B380D88590} = {98C2AF19-713A-4A5E-8D39-30B380D88590}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaintApp", "PaintApp\PaintApp.csproj", "{E5049989-1AB7-4451-A544-25AB5FEF15DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +44,10 @@ Global
 		{C7742C43-823F-4BD6-A17D-5CC90ABE542E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7742C43-823F-4BD6-A17D-5CC90ABE542E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7742C43-823F-4BD6-A17D-5CC90ABE542E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5049989-1AB7-4451-A544-25AB5FEF15DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5049989-1AB7-4451-A544-25AB5FEF15DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5049989-1AB7-4451-A544-25AB5FEF15DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5049989-1AB7-4451-A544-25AB5FEF15DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

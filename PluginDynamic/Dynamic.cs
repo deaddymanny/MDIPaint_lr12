@@ -14,8 +14,8 @@ namespace PluginDynamic
     [Version(1, 0)]
     public class DynamicPlugin : IPlugin
     {
-        public string Name => "Динамический скрипт (C#)";
-        public string Author => "Student";
+        public string Name => "Динамический скрипт";
+        public string Author => "Катаргин Р.А.";
 
         public void TransformAsync(Bitmap bitmap, IProgress<int> progress, CancellationToken cancellationToken)
         {
@@ -77,7 +77,7 @@ namespace PluginDynamic
                 Width = 600,
                 Height = 400,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = Application.Current.MainWindow
+                Owner = System.Windows.Application.Current.MainWindow
             };
 
             TextBox textBox = new TextBox

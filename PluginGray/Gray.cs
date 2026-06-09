@@ -9,7 +9,7 @@ namespace PluginGray
     public class Gray : IPlugin
     {
         public string Name => "Оттенки серого";
-        public string Author => "Student";
+        public string Author => "Катаргин Р.А.";
 
         public void TransformAsync(Bitmap bitmap, IProgress<int> progress, CancellationToken cancellationToken)
         {
